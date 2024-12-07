@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Gmail Folder Organizer",
+    "version": "1.0",
+    "description": "将来自同一发件人的邮件整理到可折叠文件夹中",
+    "permissions": [
+      "activeTab",
+      "storage"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["*://mail.google.com/*"],
+        "js": ["content.js"],
+        "css": ["styles.css"]
+      }
+    ],
+    "icons": {
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  }

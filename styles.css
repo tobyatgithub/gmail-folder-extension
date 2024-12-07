@@ -1,0 +1,44 @@
+.email-folder {
+    margin: 8px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #ffffff;
+  }
+  
+  .folder-header {
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  
+  .folder-header:hover {
+    background-color: #f1f3f4;
+  }
+  
+  .folder-toggle {
+    color: #5f6368;
+    font-size: 12px;
+    width: 20px;
+    text-align: center;
+  }
+  
+  .folder-sender {
+    font-weight: 500;
+    flex-grow: 1;
+  }
+  
+  .email-count {
+    color: #5f6368;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+  
+  .folder-content {
+    border-top: 1px solid #e0e0e0;
+    transition: max-height 0.3s ease-out;
+  }
+  
