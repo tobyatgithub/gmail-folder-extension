@@ -7,6 +7,13 @@
       "activeTab",
       "storage"
     ],
+    "host_permissions": [
+      "*://mail.google.com/*"
+    ],
+    "web_accessible_resources": [{
+      "resources": ["styles.css"],
+      "matches": ["*://mail.google.com/*"]
+    }],
     "content_scripts": [
       {
         "matches": ["*://mail.google.com/*"],
