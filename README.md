@@ -1,85 +1,70 @@
 # Gmail Folder Organizer
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+一个帮助整理 Gmail 邮件的 Chrome 扩展。
 
-Gmail Folder Organizer 是一个 Chrome 扩展程序，它能够自动将来自同一发件人的邮件组织到可折叠的文件夹中，帮助你更好地组织和管理 Gmail 收件箱。
+## 🎯 功能特点
 
-![Gmail Folder Organizer Screenshot](screenshots/demo.png)
+### 当前功能
+- 一键整理来自同一发件人的邮件到可折叠文件夹中
+- 保持文件夹状态（展开/折叠）
+- 支持深色模式
+- 显示发件人完整信息（姓名和邮箱）
 
-## ✨ 功能特点
+### 计划中的功能
+基于用户体验研究，我们计划实现以下混合方案：
 
-- 🗂️ 自动将同一发件人的邮件分组到可折叠文件夹
-- 📊 显示每个文件夹中的邮件数量
-- 🎯 简单的一键整理功能
-- 🎨 符合 Gmail 设计风格的界面
-- ⚡ 轻量级实现，不影响性能
+1. **主要整理功能**
+   - 保留全局"整理"按钮用于批量操作
+   - 添加预览功能
+   - 提供快速撤销选项
 
-## 🚀 快速开始
+2. **上下文整理**
+   - 为频繁发件人添加标记/徽章
+   - 提供快速分组操作
+   - 集成右键菜单
 
-### 前置要求
+3. **渐进式功能**
+   - 从基础分组开始
+   - 逐步开放高级选项（过滤器、规则）
+   - 保存每个发件人的偏好设置
 
-- Google Chrome 浏览器
-- 开发者模式已启用
+## 💡 设计理念
 
-### 安装步骤
+我们的设计遵循以下最佳实践：
 
-1. 克隆仓库：
-```bash
-git clone https://github.com/tobyatgithub/gmail-folder-extension.git
-cd gmail-folder-extension
-```
+1. **渐进式展示**
+   - 简单起步
+   - 按需显示高级功能
+   - 避免信息过载
 
-2. 在 Chrome 中加载扩展：
-   - 打开 Chrome 浏览器
-   - 访问 `chrome://extensions/`
-   - 启用右上角的"开发者模式"
-   - 点击"加载已解压的扩展程序"
-   - 选择项目文件夹
+2. **上下文操作**
+   - 操作靠近内容
+   - 保持视觉层次
+   - 清晰的交互提示
 
-### 使用方法
+3. **可逆操作**
+   - 简单的撤销/重做
+   - 清晰的反馈
+   - 避免破坏性更改
 
-1. 安装扩展后，打开 Gmail
-2. 在右上角找到"整理邮件"按钮
-3. 点击按钮即可自动整理邮件
-4. 点击文件夹可以展开/折叠邮件列表
+4. **一致性模式**
+   - 遵循平台约定
+   - 使用熟悉的交互模式
+   - 保持 Gmail 现有的用户体验
 
-## 🛠️ 项目结构
+## 🚀 使用方法
 
-```
-gmail-folder-organizer/
-├── manifest.json     # 扩展配置文件
-├── content.js        # 主要功能实现
-├── styles.css        # 样式文件
-├── icon48.png        # 48x48 图标
-├── icon128.png       # 128x128 图标
-└── README.md         # 项目文档
-```
+1. 安装扩展后，在 Gmail 界面右上角会出现"📁 整理邮件"按钮
+2. 点击按钮将自动整理来自同一发件人的多封邮件
+3. 可以通过点击文件夹头部来展开/折叠邮件组
 
-## 🔧 开发指南
+## 🛠️ 安装方法
 
-### 修改样式
-
-修改 `styles.css` 文件来自定义文件夹的外观：
-
-```css
-.email-folder {
-  /* 自定义文件夹容器样式 */
-}
-
-.folder-header {
-  /* 自定义文件夹标题样式 */
-}
-```
-
-### 修改功能
-
-修改 `content.js` 文件来调整功能：
-
-```javascript
-function organizeEmails() {
-  // 自定义邮件组织逻辑
-}
-```
+1. 下载源代码
+2. 打开 Chrome/Brave 扩展页面 (chrome://extensions)
+3. 启用"开发者模式"
+4. 点击"加载已解压的扩展程序"
+5. 选择源代码文件夹
 
 ## 🤝 贡献指南
 
@@ -95,10 +80,17 @@ function organizeEmails() {
 
 ## 📝 更新日志
 
-### [1.0.0] - 2024-12-07
+### [1.1.0] - 2024-03-xx (计划中)
+- 添加混合式整理方案
+- 实现上下文操作
+- 添加预览功能
+
+### [1.0.0] - 2024-03-xx
 - 初始版本发布
 - 实现基本的邮件分组功能
 - 添加可折叠文件夹界面
+- 支持深色模式
+- 完整显示发件人信息
 
 ## ⚖️ 许可证
 
@@ -108,7 +100,7 @@ function organizeEmails() {
 
 如果您遇到任何问题或有改进建议，请：
 
-1. 查看 [issues](https://github.com/tobyatgithub/gmail-folder-extension.git/issues) 页面
+1. 查看 [issues](https://github.com/tobyatgithub/gmail-folder-extension/issues) 页面
 2. 如果没有找到相关问题，请创建新的 issue
 3. 提供详细的问题描述和复现步骤
 
@@ -119,7 +111,7 @@ function organizeEmails() {
 
 ## 📞 联系方式
 
-- 项目维护者: [Your Name](https://github.com/tobyatgithub)
+- 项目维护者: [Toby Huang](https://github.com/tobyatgithub)
 - Email: toby.fangyuan@gmail.com
 
 ---
