@@ -95,24 +95,38 @@ function organizeEmails() {
   emailRows.forEach(row => {
     const senderElement = row.querySelector('.yP, .zF'); // Gmail 的发件人类名
     if (senderElement) {
-      const sender = senderElement.getAttribute('email') || senderElement.getAttribute('name');
+      const email = senderElement.getAttribute('email');
+      const name = senderElement.getAttribute('name');
       
-      if (!emailsBySender.has(sender)) {
-        emailsBySender.set(sender, []);
+      // Always show both name and email when possible
+      let senderKey = email || name;
+      let displayName;
+      
+      if (name && email) {
+        displayName = `${name} (${email})`; // Format: "John Doe (john@example.com)"
+      } else {
+        displayName = email || name; // Fallback to whatever we have
       }
-      emailsBySender.get(sender).push(row);
+      
+      if (!emailsBySender.has(senderKey)) {
+        emailsBySender.set(senderKey, {
+          displayName: displayName,
+          emails: []
+        });
+      }
+      emailsBySender.get(senderKey).emails.push(row);
     }
   });
   
   // 为有多封邮件的发件人创建文件夹
-  emailsBySender.forEach((emails, sender) => {
-    if (emails.length > 1) {
-      createFolder(sender, emails);
+  emailsBySender.forEach((data, senderKey) => {
+    if (data.emails.length > 1) {
+      createFolder(data.displayName, data.emails);
     }
   });
 }
   
-function createFolder(sender, emails) {
+function createFolder(senderDisplay, emails) {
   // 创建文件夹容器
   const folderContainer = document.createElement('div');
   folderContainer.className = 'email-folder';
@@ -122,7 +136,7 @@ function createFolder(sender, emails) {
   folderHeader.className = 'folder-header';
   folderHeader.innerHTML = `
     <span class="folder-toggle">▼</span>
-    <span class="folder-sender">${sender}</span>
+    <span class="folder-sender">${senderDisplay}</span>
     <span class="email-count">${emails.length} 封邮件</span>
   `;
   
@@ -137,7 +151,7 @@ function createFolder(sender, emails) {
   });
   
   // Add state persistence
-  const folderId = `folder-${sender.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const folderId = `folder-${senderDisplay.replace(/[^a-zA-Z0-9]/g, '')}`;
   folderContainer.id = folderId;
   
   // Load saved state

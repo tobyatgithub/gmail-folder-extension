@@ -41,7 +41,19 @@
   .folder-content {
     border-top: 1px solid #e0e0e0;
     transition: all 0.3s ease-out;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: 500px;
+  }
+  
+  /* Add smooth scrolling to the entire page */
+  html, body {
+    scroll-behavior: smooth;
+  }
+  
+  /* Ensure the email container is scrollable */
+  .AO {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 100px);
   }
   
   @media (prefers-color-scheme: dark) {
