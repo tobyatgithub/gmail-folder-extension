@@ -1,8 +1,10 @@
 .email-folder {
-    margin: 8px 0;
+    margin: 8px 16px;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     background-color: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    animation: folderFadeIn 0.3s ease-out;
   }
   
   .folder-header {
@@ -27,6 +29,10 @@
     transition: transform 0.3s ease;
   }
   
+  .folder-toggle.collapsed {
+    transform: rotate(-90deg);
+  }
+  
   .folder-sender {
     font-weight: 500;
     flex-grow: 1;
@@ -41,8 +47,15 @@
   .folder-content {
     border-top: 1px solid #e0e0e0;
     transition: all 0.3s ease-out;
-    overflow-y: auto;
+    overflow-y: hidden;
     max-height: 500px;
+    opacity: 1;
+  }
+  
+  .folder-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    border-top: none;
   }
   
   /* Add smooth scrolling to the entire page */
@@ -131,6 +144,108 @@
     
     .quick-group-action:hover {
       background-color: rgba(255,255,255,0.1);
+    }
+  }
+  
+  .folder-row {
+    background-color: transparent !important;
+  }
+  
+  .folder-row:hover {
+    background-color: transparent !important;
+  }
+  
+  .folder-row td {
+    padding: 0 !important;
+  }
+  
+  /* Add these animation keyframes */
+  @keyframes folderFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes contentFadeIn {
+    from {
+      opacity: 0;
+      max-height: 0;
+    }
+    to {
+      opacity: 1;
+      max-height: 500px;
+    }
+  }
+  
+  .undo-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    transform: none;
+    background-color: #323232;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    min-width: 200px;
+  }
+  
+  .undo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .undo-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .undo-sender {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .no-actions {
+    color: #999;
+    font-size: 13px;
+    text-align: center;
+    padding: 4px 0;
+  }
+  
+  .undo-button {
+    background: none;
+    border: none;
+    color: #8ab4f8;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+  }
+  
+  .undo-button:hover {
+    background-color: rgba(138, 180, 248, 0.1);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .undo-container {
+      background-color: #202124;
+      border: 1px solid #3c4043;
     }
   }
   
