@@ -225,14 +225,10 @@ function createFolder(senderDisplay, emails) {
 
 // Add this after the existing functions
 function addQuickActions() {
-  // Get all email rows that don't already have quick actions
   const emailRows = Array.from(document.querySelectorAll('tr.zA:not(.has-quick-actions)'));
-  
-  // Create a map of sender frequencies
   const senderFrequency = analyzeSenderFrequency();
   
   emailRows.forEach(row => {
-    // Mark row as processed
     row.classList.add('has-quick-actions');
     
     const senderElement = row.querySelector('.yP, .zF');
@@ -242,7 +238,6 @@ function addQuickActions() {
       const senderKey = email || name;
       const frequency = senderFrequency.get(senderKey) || 0;
       
-      // Only add badge and quick-action for senders with multiple emails
       if (frequency > 1) {
         // Add frequency badge
         const badge = document.createElement('span');
@@ -251,8 +246,8 @@ function addQuickActions() {
         badge.title = `${frequency} emails from this sender`;
         senderElement.appendChild(badge);
         
-        // Add quick-action button
-        const actionsContainer = document.createElement('div');
+        // Add quick-action button at the start of subject
+        const actionsContainer = document.createElement('span');
         actionsContainer.className = 'quick-actions';
         
         const groupButton = document.createElement('button');
@@ -260,12 +255,18 @@ function addQuickActions() {
         groupButton.innerHTML = '📁';
         groupButton.title = '整理此发件人的邮件';
         groupButton.onclick = (e) => {
-          e.stopPropagation(); // Prevent row selection
+          e.stopPropagation();
           groupSingleSender(senderKey);
         };
         
         actionsContainer.appendChild(groupButton);
-        row.appendChild(actionsContainer);
+        
+        // Find the subject container and insert at the beginning
+        const subjectContainer = row.querySelector('.bog');
+        if (subjectContainer) {
+          // Insert as the first child of .bog
+          subjectContainer.insertBefore(actionsContainer, subjectContainer.firstChild);
+        }
       }
     }
   });
