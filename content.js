@@ -176,10 +176,22 @@ function organizeEmails() {
 function createFolder(senderDisplay, emails) {
   // Store original positions and parent before removing emails
   const originalParent = emails[0].parentNode;
-  const originalEmails = emails.map(email => ({
-    element: email,
-    // Store the next sibling for each email individually
-    nextSibling: email.nextElementSibling
+  
+  // Find the next sibling after the last email in the group
+  const lastEmail = emails[emails.length - 1];
+  const groupNextSibling = lastEmail.nextElementSibling;
+  
+  // Store the emails data and their relative positions
+  const originalEmails = emails.map((email, index) => ({
+    data: Array.from(email.cells).map(cell => ({
+      className: cell.className,
+      innerHTML: cell.innerHTML
+    })),
+    // Store position information
+    position: {
+      previousSibling: email.previousElementSibling,
+      nextSibling: email.nextElementSibling
+    }
   }));
   
   // Create folder elements as before
@@ -210,7 +222,9 @@ function createFolder(senderDisplay, emails) {
   
   // Add emails to folder
   sortedEmails.forEach(email => {
+    // Clone the email for the folder
     folderContent.appendChild(email.cloneNode(true));
+    // Remove the original
     email.remove();
   });
   
@@ -269,8 +283,8 @@ function createFolder(senderDisplay, emails) {
     folderActions.set(folderId, {
       folder: folderRow,
       originalEmails: originalEmails,
-      originalParent: originalParent
-      // Remove nextSibling from here since we now store it per email
+      originalParent: originalParent,
+      groupNextSibling: groupNextSibling
     });
     
     updateUndoButtonState();
@@ -453,20 +467,58 @@ function updateUndoButtonState() {
           return;
         }
         
-        // Remove the folder
+        // Remove the folder first
         if (folder && folder.parentNode) {
           folder.remove();
         }
         
-        // Restore emails to their original positions
-        originalEmails.forEach(({ element, nextSibling }) => {
-          // Use the stored nextSibling for each individual email
-          if (nextSibling && nextSibling.parentNode === originalParent) {
-            originalParent.insertBefore(element, nextSibling);
-          } else {
-            // If nextSibling is no longer valid, append to parent
-            originalParent.appendChild(element);
+        // Create all email elements first
+        const restoredEmails = originalEmails.map(({ data }) => {
+          const restoredEmail = document.createElement('tr');
+          restoredEmail.className = 'zA yO';
+          
+          data.forEach(cellData => {
+            const td = document.createElement('td');
+            td.className = cellData.className;
+            td.innerHTML = cellData.innerHTML;
+            restoredEmail.appendChild(td);
+          });
+          
+          return restoredEmail;
+        });
+        
+        // Now restore them in their original positions
+        restoredEmails.forEach((restoredEmail, index) => {
+          const originalPosition = originalEmails[index].position;
+          
+          // Try to find a valid reference point
+          let referenceNode = null;
+          
+          // First try the previous sibling's next sibling
+          if (originalPosition.previousSibling && 
+              originalPosition.previousSibling.parentNode === originalParent) {
+            referenceNode = originalPosition.previousSibling.nextSibling;
           }
+          // Then try the next sibling
+          else if (originalPosition.nextSibling && 
+                   originalPosition.nextSibling.parentNode === originalParent) {
+            referenceNode = originalPosition.nextSibling;
+          }
+          // Finally, if no reference points exist, append to parent
+          
+          if (referenceNode) {
+            originalParent.insertBefore(restoredEmail, referenceNode);
+          } else {
+            originalParent.appendChild(restoredEmail);
+          }
+          
+          // Re-initialize Gmail's event handlers
+          const event = new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          });
+          restoredEmail.dispatchEvent(event);
         });
         
         // Remove this action from the map
