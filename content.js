@@ -1,31 +1,56 @@
 // Add this at the top of the file
 let isButtonAdded = false;
 
-// 等待页面加载完成
-function waitForGmailToLoad() {
-  console.log('Waiting for Gmail to load...');
-  
-  const observer = new MutationObserver((mutations, obs) => {
-    if (isButtonAdded) {
-      obs.disconnect();
+// Wrap everything in a Gmail-specific check
+function initializeGmailExtension() {
+  // Only run on Gmail
+  if (!window.location.hostname.includes('mail.google.com')) {
+    return;
+  }
+
+  // Wait for Gmail to be ready
+  function waitForGmailToLoad() {
+    console.log('Waiting for Gmail to load...');
+    
+    // Don't start observing until we have the basic Gmail structure
+    const gmailViewExists = document.querySelector('.aeH');
+    if (!gmailViewExists) {
+      setTimeout(waitForGmailToLoad, 500);
       return;
     }
 
-    // Single initialization attempt
-    initializeExtension();
-  });
+    const observer = new MutationObserver((mutations, obs) => {
+      if (isButtonAdded) {
+        obs.disconnect();
+        return;
+      }
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+      // Try to initialize only when we see Gmail's header
+      const gmailHeader = document.querySelector('.gb_Ue, .gb_Td, .G-atb');
+      if (gmailHeader) {
+        initializeExtension();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  // Start initialization based on document state
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', waitForGmailToLoad);
+  } else {
+    waitForGmailToLoad();
+  }
 }
 
-// Replace the existing event listener with:
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', waitForGmailToLoad);
-} else {
-  waitForGmailToLoad();
+// Start the initialization process
+try {
+  initializeGmailExtension();
+} catch (error) {
+  console.log('Deferring Gmail extension initialization');
 }
 
 function initializeExtension() {
@@ -74,6 +99,22 @@ function initializeExtension() {
     headerRight.insertBefore(toggleButton, headerRight.firstChild);
     console.log('Button successfully added to the header');
     isButtonAdded = true;
+    
+    // Initialize quick actions
+    addQuickActions();
+    
+    // Watch for new emails and add quick actions to them
+    const emailContainer = document.querySelector('.AO');
+    if (emailContainer) {
+      const observer = new MutationObserver(() => {
+        addQuickActions();
+      });
+      
+      observer.observe(emailContainer, {
+        childList: true,
+        subtree: true
+      });
+    }
   } else {
     console.error('Could not find header element to insert button');
   }
@@ -179,5 +220,102 @@ function createFolder(senderDisplay, emails) {
   const inboxContainer = document.querySelector('.AO');
   if (inboxContainer) {
     inboxContainer.insertBefore(folderContainer, inboxContainer.firstChild);
+  }
+}
+
+// Add this after the existing functions
+function addQuickActions() {
+  // Get all email rows that don't already have quick actions
+  const emailRows = Array.from(document.querySelectorAll('tr.zA:not(.has-quick-actions)'));
+  
+  // Create a map of sender frequencies
+  const senderFrequency = analyzeSenderFrequency();
+  
+  emailRows.forEach(row => {
+    // Mark row as processed
+    row.classList.add('has-quick-actions');
+    
+    const senderElement = row.querySelector('.yP, .zF');
+    if (senderElement) {
+      const email = senderElement.getAttribute('email');
+      const name = senderElement.getAttribute('name');
+      const senderKey = email || name;
+      const frequency = senderFrequency.get(senderKey) || 0;
+      
+      // Only add badge and quick-action for senders with multiple emails
+      if (frequency > 1) {
+        // Add frequency badge
+        const badge = document.createElement('span');
+        badge.className = 'sender-frequency-badge';
+        badge.textContent = frequency;
+        badge.title = `${frequency} emails from this sender`;
+        senderElement.appendChild(badge);
+        
+        // Add quick-action button
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'quick-actions';
+        
+        const groupButton = document.createElement('button');
+        groupButton.className = 'quick-group-action';
+        groupButton.innerHTML = '📁';
+        groupButton.title = '整理此发件人的邮件';
+        groupButton.onclick = (e) => {
+          e.stopPropagation(); // Prevent row selection
+          groupSingleSender(senderKey);
+        };
+        
+        actionsContainer.appendChild(groupButton);
+        row.appendChild(actionsContainer);
+      }
+    }
+  });
+}
+
+// Helper function to analyze sender frequency
+function analyzeSenderFrequency() {
+  const senderFrequency = new Map();
+  const allRows = document.querySelectorAll('tr.zA');
+  
+  allRows.forEach(row => {
+    const senderElement = row.querySelector('.yP, .zF');
+    if (senderElement) {
+      const email = senderElement.getAttribute('email');
+      const name = senderElement.getAttribute('name');
+      const senderKey = email || name;
+      
+      senderFrequency.set(senderKey, (senderFrequency.get(senderKey) || 0) + 1);
+    }
+  });
+  
+  return senderFrequency;
+}
+
+// Function to group emails from a single sender
+function groupSingleSender(senderKey) {
+  const emailRows = Array.from(document.querySelectorAll('tr.zA'));
+  const senderEmails = emailRows.filter(row => {
+    const senderElement = row.querySelector('.yP, .zF');
+    if (senderElement) {
+      const email = senderElement.getAttribute('email');
+      const name = senderElement.getAttribute('name');
+      return (email || name) === senderKey;
+    }
+    return false;
+  });
+  
+  if (senderEmails.length > 1) {
+    // Get sender display name from first email
+    const firstSenderElement = senderEmails[0].querySelector('.yP, .zF');
+    const email = firstSenderElement.getAttribute('email');
+    const name = firstSenderElement.getAttribute('name');
+    let displayName;
+    
+    if (name && email) {
+      displayName = `${name} (${email})`;
+    } else {
+      displayName = email || name;
+    }
+    
+    createFolder(displayName, senderEmails);
   }
 }
