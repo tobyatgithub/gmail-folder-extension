@@ -191,6 +191,13 @@ function createFolder(senderDisplay, emails) {
     const folderRow = document.createElement('tr');
     folderRow.className = 'zA folder-header';
     
+    // Generate a unique ID for the folder that won't conflict with email IDs
+    const folderId = 'folder-' + Date.now();
+    folderRow.setAttribute('data-folder-id', folderId);
+    
+    // Important: Do NOT copy data attributes from emails to folder
+    // This was causing confusion in Gmail's handlers
+    
     // Create folder header following Gmail's structure
     folderRow.innerHTML = `
         <td class="PF xY"></td>
@@ -210,27 +217,21 @@ function createFolder(senderDisplay, emails) {
         <td class="bq4 xY"></td>
     `;
 
-    // Get the parent table
-    const parentTable = emails[0].parentElement;
-    if (!parentTable) {
-        console.error('Could not find parent table');
-        return null;
-    }
-
-    console.log('Found parent table:', parentTable);
-
-    // Insert folder row before the first email
     try {
-        parentTable.insertBefore(folderRow, emails[0]);
-        console.log('Folder row inserted');
+        const parentTable = emails[0].parentElement;
+        if (!parentTable) return null;
 
-        // Move emails under the folder
+        // Insert folder row before the first email
+        parentTable.insertBefore(folderRow, emails[0]);
+
+        // Move emails under the folder WITHOUT changing their data attributes
         emails.forEach((email, index) => {
             email.classList.add('folder-email');
-            // Always move the email right after the folder or the last moved email
+            // Remove our previous attempt to link emails to folder
+            // email.setAttribute('data-group-id', folderRow.getAttribute('data-legacy-thread-id'));
+            
             const referenceNode = index === 0 ? folderRow : emails[index - 1];
             parentTable.insertBefore(email, referenceNode.nextSibling);
-            console.log(`Moved email ${index + 1} of ${emails.length}`);
         });
 
         // Add toggle functionality
@@ -256,7 +257,7 @@ function createFolder(senderDisplay, emails) {
             folderRow.remove();
             
             // Restore emails in reverse order to maintain correct positioning
-            [...originalPositions].reverse().forEach(({email, position, parentNode}) => {
+            [...originalPositions].reverse().forEach(({email, position, parentNode}, index) => {
                 email.classList.remove('folder-email');
                 email.style.display = '';
                 
@@ -278,6 +279,18 @@ function createFolder(senderDisplay, emails) {
                 } else {
                     // If no reference points exist, append to parent
                     parentNode.appendChild(email);
+                }
+                
+                // Reinitialize Gmail handlers after restoring position
+                reinitializeGmailHandlers(email);
+                
+                // If this is the last email we're restoring (first in original order),
+                // reinitialize handlers for the next email too
+                if (index === originalPositions.length - 1) {
+                    const nextElement = email.nextElementSibling;
+                    if (nextElement) {
+                        reinitializeGmailHandlers(nextElement);
+                    }
                 }
             });
         });
@@ -734,3 +747,26 @@ function cleanupStoredFolders() {
 
 // Call cleanup periodically
 setInterval(cleanupStoredFolders, ONE_DAY);
+
+// Add this new helper function
+function reinitializeGmailHandlers(element) {
+    if (!element) return;
+    
+    // Trigger Gmail's handler reinitialization by simulating a mouseover event
+    const mouseEvent = new MouseEvent('mouseover', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+    });
+    element.dispatchEvent(mouseEvent);
+    
+    // Also reinitialize click handlers
+    const clickEvent = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+    });
+    // We dispatch and immediately stop propagation to trigger initialization without actual click
+    element.addEventListener('click', (e) => e.stopPropagation(), { once: true });
+    element.dispatchEvent(clickEvent);
+}
