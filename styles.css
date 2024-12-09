@@ -1,5 +1,6 @@
 .email-folder {
-    margin: 8px 16px;
+    margin: 0;
+    width: 100%;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     background-color: #ffffff;
@@ -8,17 +9,45 @@
   }
   
   .folder-header {
-    padding: 8px 12px;
-    background-color: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #f1f3f4;
     cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .folder-header-left {
     display: flex;
     align-items: center;
     gap: 8px;
-    user-select: none;
   }
   
-  .folder-header:hover {
-    background-color: #f1f3f4;
+  .folder-header-right {
+    display: flex;
+    align-items: center;
+  }
+  
+  .folder-undo-button {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background-color 0.2s;
+  }
+  
+  .folder-header:hover .folder-undo-button {
+    opacity: 1;
+  }
+  
+  .folder-undo-button:hover {
+    background-color: rgba(26, 115, 232, 0.1);
   }
   
   .folder-toggle {
@@ -50,6 +79,8 @@
     overflow-y: hidden;
     max-height: 500px;
     opacity: 1;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .folder-content.collapsed {
@@ -149,14 +180,23 @@
   
   .folder-row {
     background-color: transparent !important;
-  }
-  
-  .folder-row:hover {
-    background-color: transparent !important;
+    display: table-row !important;
+    width: 100% !important;
   }
   
   .folder-row td {
     padding: 0 !important;
+    vertical-align: top !important;
+    height: auto !important;
+    white-space: normal !important;
+  }
+  
+  .folder-row td:not(:last-child) {
+    border-bottom: none !important;
+  }
+  
+  .folder-row:hover {
+    background-color: transparent !important;
   }
   
   /* Add these animation keyframes */
@@ -247,5 +287,10 @@
       background-color: #202124;
       border: 1px solid #3c4043;
     }
+  }
+  
+  /* Add this to handle Gmail's table structure */
+  .zA.folder-row > td {
+    max-width: none !important;
   }
   
