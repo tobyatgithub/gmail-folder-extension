@@ -174,10 +174,22 @@ function organizeEmails() {
   });
 }
   
-function createFolder(senderDisplay, emails, initialState = 'expanded') {
-    // Create folder row that matches Gmail's structure
+function createFolder(senderDisplay, emails) {
+    // Store original positions with full context
+    const originalPositions = emails.map(email => {
+        return {
+            email: email,
+            nextSibling: email.nextElementSibling,
+            parentNode: email.parentElement,
+            position: {
+                previousSibling: email.previousElementSibling,
+                nextSibling: email.nextElementSibling
+            }
+        };
+    });
+
     const folderRow = document.createElement('tr');
-    folderRow.className = 'zA folder-header';  // Gmail's standard row class
+    folderRow.className = 'zA folder-header';
     
     // Create folder header following Gmail's structure
     folderRow.innerHTML = `
@@ -186,167 +198,172 @@ function createFolder(senderDisplay, emails, initialState = 'expanded') {
         <td class="apU xY"></td>
         <td class="WA xY"></td>
         <td class="yX xY" role="gridcell">
-            <span class="folder-toggle">${initialState === 'expanded' ? '▼' : '▶'}</span>
+            <span class="folder-toggle">▼</span>
             <span class="folder-sender">${senderDisplay}</span>
             <span class="email-count">(${emails.length})</span>
         </td>
-        <td class="xY a4W" role="gridcell">
-            <div class="xS">
-                <div class="xT">
-                    <div class="y6">
-                        <button class="folder-undo-button" title="撤销此分组">撤销</button>
-                    </div>
-                </div>
-            </div>
-        </td>
+        <td class="a4W xY"></td>
         <td class="byZ xY"></td>
-        <td class="xW xY"></td>
+        <td class="xW xY">
+            <button class="folder-undo-button" title="撤销此分组">撤销</button>
+        </td>
         <td class="bq4 xY"></td>
     `;
 
-    // Insert folder row before the first email of the group
+    // Get the parent table
     const parentTable = emails[0].parentElement;
-    const firstEmailIndex = Array.from(parentTable.children).indexOf(emails[0]);
-    parentTable.insertBefore(folderRow, emails[0]);
+    if (!parentTable) {
+        console.error('Could not find parent table');
+        return null;
+    }
 
-    // Move all emails right after the folder row
-    emails.forEach((email, index) => {
-        email.classList.add('folder-email');
-        const currentPosition = Array.from(parentTable.children).indexOf(email);
-        if (currentPosition !== firstEmailIndex + index + 1) {
-            parentTable.insertBefore(email, folderRow.nextSibling);
-        }
-        email.style.display = initialState === 'expanded' ? '' : 'none';
-    });
+    console.log('Found parent table:', parentTable);
 
-    // Toggle functionality
-    const toggleButton = folderRow.querySelector('.folder-toggle');
-    toggleButton.style.cursor = 'pointer';
-    toggleButton.style.padding = '0 8px';
-    
-    toggleButton.addEventListener('click', () => {
-        const isExpanded = toggleButton.textContent === '▼';
-        toggleButton.textContent = isExpanded ? '▶' : '▼';
-        
-        // Find all emails that belong to this folder
-        const folderEmails = [];
-        let nextElement = folderRow.nextElementSibling;
-        while (nextElement && nextElement.classList.contains('folder-email')) {
-            folderEmails.push(nextElement);
-            nextElement = nextElement.nextElementSibling;
-        }
-        
-        // Toggle visibility
-        folderEmails.forEach(email => {
-            email.style.display = isExpanded ? 'none' : '';
+    // Insert folder row before the first email
+    try {
+        parentTable.insertBefore(folderRow, emails[0]);
+        console.log('Folder row inserted');
+
+        // Move emails under the folder
+        emails.forEach((email, index) => {
+            email.classList.add('folder-email');
+            // Always move the email right after the folder or the last moved email
+            const referenceNode = index === 0 ? folderRow : emails[index - 1];
+            parentTable.insertBefore(email, referenceNode.nextSibling);
+            console.log(`Moved email ${index + 1} of ${emails.length}`);
         });
-    });
 
-    // Undo functionality
-    const undoButton = folderRow.querySelector('.folder-undo-button');
-    undoButton.addEventListener('click', () => {
-        // Remove folder row
-        folderRow.remove();
-        
-        // Restore emails to original state
-        emails.forEach(email => {
-            email.classList.remove('folder-email');
-            email.style.display = '';
+        // Add toggle functionality
+        const toggleButton = folderRow.querySelector('.folder-toggle');
+        toggleButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = toggleButton.textContent === '▼';
+            toggleButton.textContent = isExpanded ? '▶' : '▼';
+            
+            let nextElement = folderRow.nextElementSibling;
+            while (nextElement && nextElement.classList.contains('folder-email')) {
+                nextElement.style.display = isExpanded ? 'none' : '';
+                nextElement = nextElement.nextElementSibling;
+            }
         });
-    });
 
-    // Add minimal required styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .folder-toggle {
-            cursor: pointer;
-            user-select: none;
-            color: #666;
-        }
-        .folder-sender {
-            font-weight: 500;
-            color: #202124;
-        }
-        .folder-undo-button {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-        .folder-undo-button:hover {
-            background-color: rgba(32, 33, 36, 0.059);
-            border-radius: 4px;
-        }
-        .folder-email {
-            margin-left: 20px;
-        }
-    `;
-    document.head.appendChild(style);
+        // Add undo functionality with position restoration
+        const undoButton = folderRow.querySelector('.folder-undo-button');
+        undoButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Remove folder row first
+            folderRow.remove();
+            
+            // Restore emails in reverse order to maintain correct positioning
+            [...originalPositions].reverse().forEach(({email, position, parentNode}) => {
+                email.classList.remove('folder-email');
+                email.style.display = '';
+                
+                // Try to find the best reference point for insertion
+                let referenceNode = null;
+                
+                // First try the original next sibling
+                if (position.nextSibling && position.nextSibling.parentNode === parentNode) {
+                    referenceNode = position.nextSibling;
+                }
+                // If no valid next sibling, try inserting after the previous sibling
+                else if (position.previousSibling && position.previousSibling.parentNode === parentNode) {
+                    referenceNode = position.previousSibling.nextSibling;
+                }
+                
+                // Insert the email at its original position
+                if (referenceNode) {
+                    parentNode.insertBefore(email, referenceNode);
+                } else {
+                    // If no reference points exist, append to parent
+                    parentNode.appendChild(email);
+                }
+            });
+        });
 
-    return folderRow;
+        console.log('Folder creation complete');
+        return folderRow;
+    } catch (error) {
+        console.error('Error creating folder:', error);
+        return null;
+    }
 }
 
 // Add this helper function for smooth scrolling
 function scrollIntoViewSmooth(element) {
-  const rect = element.getBoundingClientRect();
-  const isInViewport = (
-    rect.top >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-  );
+    if (!element) {
+        console.warn('Attempted to scroll to a non-existent element');
+        return;
+    }
 
-  if (!isInViewport) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+    try {
+        const rect = element.getBoundingClientRect();
+        const isInViewport = (
+            rect.top >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+        );
+
+        if (!isInViewport) {
+            element.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+            });
+        }
+    } catch (error) {
+        console.warn('Error while attempting to scroll:', error);
+    }
 }
 
 // Add this after the existing functions
 function addQuickActions() {
-  const emailRows = Array.from(document.querySelectorAll('tr.zA:not(.has-quick-actions)'));
-  const senderFrequency = analyzeSenderFrequency();
-  
-  emailRows.forEach(row => {
-    row.classList.add('has-quick-actions');
+    console.log('Adding quick actions...'); // Debug log
     
-    const senderElement = row.querySelector('.yP, .zF');
-    if (senderElement) {
-      const email = senderElement.getAttribute('email');
-      const name = senderElement.getAttribute('name');
-      const senderKey = email || name;
-      const frequency = senderFrequency.get(senderKey) || 0;
-      
-      if (frequency > 1) {
-        // Add frequency badge
-        const badge = document.createElement('span');
-        badge.className = 'sender-frequency-badge';
-        badge.textContent = frequency;
-        badge.title = `${frequency} emails from this sender`;
-        senderElement.appendChild(badge);
+    const emailRows = Array.from(document.querySelectorAll('tr.zA:not(.has-quick-actions)'));
+    const senderFrequency = analyzeSenderFrequency();
+    
+    emailRows.forEach(row => {
+        console.log('Processing row:', row); // Debug log
         
-        // Add quick-action button at the start of subject
-        const actionsContainer = document.createElement('span');
-        actionsContainer.className = 'quick-actions';
+        row.classList.add('has-quick-actions');
         
-        const groupButton = document.createElement('button');
-        groupButton.className = 'quick-group-action';
-        groupButton.innerHTML = '📁';
-        groupButton.title = '整理此发件人的邮件';
-        groupButton.onclick = (e) => {
-          e.stopPropagation();
-          groupSingleSender(senderKey);
-        };
-        
-        actionsContainer.appendChild(groupButton);
-        
-        // Find the subject container and insert at the beginning
-        const subjectContainer = row.querySelector('.bog');
-        if (subjectContainer) {
-          // Insert as the first child of .bog
-          subjectContainer.insertBefore(actionsContainer, subjectContainer.firstChild);
+        const senderElement = row.querySelector('.yP, .zF');
+        if (senderElement) {
+            const email = senderElement.getAttribute('email');
+            const name = senderElement.getAttribute('name');
+            const senderKey = email || name;
+            const frequency = senderFrequency.get(senderKey) || 0;
+            
+            console.log('Sender info:', { email, name, frequency }); // Debug log
+            
+            if (frequency > 1) {
+                // Add quick-action button at the start of subject
+                const subjectContainer = row.querySelector('.bog');
+                if (subjectContainer) {
+                    const actionsContainer = document.createElement('span');
+                    actionsContainer.className = 'quick-actions';
+                    
+                    const groupButton = document.createElement('button');
+                    groupButton.className = 'quick-group-action';
+                    groupButton.innerHTML = '📁';
+                    groupButton.title = '整理此发件人的邮件';
+                    
+                    // Add explicit click handler
+                    groupButton.addEventListener('click', (e) => {
+                        console.log('Quick action button clicked'); // Debug log
+                        e.stopPropagation();
+                        e.preventDefault();
+                        groupSingleSender(senderKey);
+                    });
+                    
+                    actionsContainer.appendChild(groupButton);
+                    subjectContainer.insertBefore(actionsContainer, subjectContainer.firstChild);
+                    
+                    console.log('Added quick action button for:', senderKey); // Debug log
+                }
+            }
         }
-      }
-    }
-  });
+    });
 }
 
 // Helper function to analyze sender frequency
@@ -370,34 +387,60 @@ function analyzeSenderFrequency() {
 
 // Function to group emails from a single sender
 function groupSingleSender(senderKey) {
-  const emailRows = Array.from(document.querySelectorAll('tr.zA'));
-  const senderEmails = emailRows.filter(row => {
-    const senderElement = row.querySelector('.yP, .zF');
-    if (senderElement) {
-      const email = senderElement.getAttribute('email');
-      const name = senderElement.getAttribute('name');
-      return (email || name) === senderKey;
-    }
-    return false;
-  });
-  
-  if (senderEmails.length > 1) {
-    // Get sender display name from first email
-    const firstSenderElement = senderEmails[0].querySelector('.yP, .zF');
-    const email = firstSenderElement.getAttribute('email');
-    const name = firstSenderElement.getAttribute('name');
-    let displayName;
+    console.log('Starting groupSingleSender for:', senderKey); // Debug log
     
-    if (name && email) {
-      displayName = `${name} (${email})`;
+    const emailRows = Array.from(document.querySelectorAll('tr.zA'));
+    console.log('Total email rows found:', emailRows.length); // Debug log
+    
+    const senderEmails = emailRows.filter(row => {
+        const senderElement = row.querySelector('.yP, .zF');
+        if (senderElement) {
+            const email = senderElement.getAttribute('email');
+            const name = senderElement.getAttribute('name');
+            const matches = (email || name) === senderKey;
+            console.log('Checking email:', { email, name, senderKey, matches }); // Debug log
+            return matches;
+        }
+        return false;
+    });
+    
+    console.log('Filtered sender emails:', senderEmails.length); // Debug log
+    
+    if (senderEmails.length > 1) {
+        // Get sender display name from first email
+        const firstSenderElement = senderEmails[0].querySelector('.yP, .zF');
+        const email = firstSenderElement.getAttribute('email');
+        const name = firstSenderElement.getAttribute('name');
+        let displayName;
+        
+        if (name && email) {
+            displayName = `${name} (${email})`;
+        } else {
+            displayName = email || name;
+        }
+        
+        console.log('Creating folder with display name:', displayName); // Debug log
+        
+        // Get the parent table before creating the folder
+        const parentTable = senderEmails[0].parentElement;
+        if (!parentTable) {
+            console.error('Could not find parent table for emails');
+            return;
+        }
+        
+        const folder = createFolder(displayName, senderEmails);
+        console.log('Folder created:', folder); // Debug log
+        
+        if (folder && folder.parentElement) {
+            requestAnimationFrame(() => {
+                scrollIntoViewSmooth(folder);
+            });
+        } else {
+            console.error('Folder was not properly inserted into DOM');
+        }
     } else {
-      displayName = email || name;
+        console.log('Not enough emails found for grouping');
     }
-    
-    const folder = createFolder(displayName, senderEmails);
-    // Scroll the new folder into view
-    setTimeout(() => scrollIntoViewSmooth(folder), 100);
-  }
 }
 
 // Add this function to handle undo
@@ -447,7 +490,7 @@ function updateUndoButtonState() {
     const senderName = action.folder.querySelector('.folder-sender').textContent;
     undoEntry.innerHTML = `
       <span class="undo-sender">${senderName}</span>
-      <button class="undo-button">撤销</button>
+      <button class="undo-button">销</button>
     `;
     
     const undoButton = undoEntry.querySelector('.undo-button');

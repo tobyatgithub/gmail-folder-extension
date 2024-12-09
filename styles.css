@@ -13,10 +13,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 16px;
-    background-color: #f1f3f4;
+    background-color: #f2f6fc;
     cursor: pointer;
     width: 100%;
     box-sizing: border-box;
+    font-family: 'Google Sans', Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
   }
   
   .folder-header-left {
@@ -39,10 +40,10 @@
     border-radius: 4px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s, background-color 0.2s;
+    transition: opacity 0.2s;
   }
   
-  .folder-header:hover .folder-undo-button {
+  tr.folder-header:hover .folder-undo-button {
     opacity: 1;
   }
   
@@ -53,9 +54,11 @@
   .folder-toggle {
     color: #5f6368;
     font-size: 12px;
-    width: 20px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 16px;
     text-align: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
   }
   
   .folder-toggle.collapsed {
@@ -63,14 +66,14 @@
   }
   
   .folder-sender {
+    color: #202124;
+    font-size: 14px;
     font-weight: 500;
-    flex-grow: 1;
   }
   
   .email-count {
     color: #5f6368;
-    font-size: 12px;
-    padding: 0 8px;
+    font-size: 13px;
   }
   
   .folder-content {
@@ -130,24 +133,18 @@
     gap: 4px;
     margin-right: 8px;
     vertical-align: middle;
-    line-height: inherit;
-    position: relative;
-    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s;
   }
   
   .quick-group-action {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 2px;
+    padding: 4px;
     border-radius: 4px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
     font-size: 14px;
-    line-height: inherit;
-    vertical-align: baseline;
-    position: relative;
-    z-index: 2;
+    transition: background-color 0.2s;
   }
   
   .quick-actions::before {
@@ -155,12 +152,11 @@
   }
   
   tr.zA:hover .quick-actions {
-    display: inline-flex;
+    opacity: 1;
   }
   
   .quick-group-action:hover {
-    opacity: 1;
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(32, 33, 36, 0.059);
   }
   
   @media (prefers-color-scheme: dark) {
@@ -292,5 +288,246 @@
   /* Add this to handle Gmail's table structure */
   .zA.folder-row > td {
     max-width: none !important;
+  }
+  
+  /* Add these styles to your existing styles.css */
+  .folder-header {
+    background-color: #f2f6fc !important;
+    border-bottom: 1px solid #e8eaed;
+    font-family: 'Google Sans', Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+  }
+  
+  .folder-header:hover {
+    background-color: #f8f9fa !important;
+  }
+  
+  .folder-header-content {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  
+  .folder-toggle {
+    cursor: pointer;
+    user-select: none;
+    color: #5f6368;
+    font-size: 12px;
+    padding: 0 8px;
+    margin-right: 4px;
+    transition: transform 0.2s ease;
+  }
+  
+  .folder-toggle:hover {
+    color: #202124;
+  }
+  
+  .folder-sender {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+    margin-right: 8px;
+  }
+  
+  .email-count {
+    color: #5f6368;
+    font-size: 13px;
+    font-weight: normal;
+  }
+  
+  .folder-undo-button {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #5f6368;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .folder-undo-button:hover {
+    background-color: rgba(32, 33, 36, 0.059);
+    color: #202124;
+  }
+  
+  .undo-icon {
+    margin-right: 4px;
+    font-size: 14px;
+  }
+  
+  .folder-email {
+    padding-left: 20px;
+    border-left: 2px solid #e8eaed;
+  }
+  
+  .folder-email:hover {
+    border-left-color: #1a73e8;
+  }
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .folder-header {
+      background-color: #202124 !important;
+      border-bottom-color: #3c4043;
+    }
+    
+    .folder-header:hover {
+      background-color: #303134 !important;
+    }
+    
+    .folder-toggle,
+    .email-count {
+      color: #9aa0a6;
+    }
+    
+    .folder-sender {
+      color: #e8eaed;
+    }
+    
+    .folder-email {
+      border-left-color: #3c4043;
+    }
+    
+    .folder-email:hover {
+      border-left-color: #8ab4f8;
+    }
+  }
+  
+  /* Reset and update folder header styles */
+  .folder-header {
+    background-color: #f2f6fc !important;
+  }
+  
+  .folder-header td {
+    padding: 8px 0 !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    position: relative !important;
+  }
+  
+  /* Sender column styles */
+  .folder-header .yX {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding-left: 16px !important;
+  }
+  
+  .folder-toggle {
+    color: #5f6368;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 16px;
+    display: inline-block;
+  }
+  
+  .folder-sender {
+    color: #202124;
+    font-size: 14px;
+    font-weight: 500;
+    margin-right: 8px;
+  }
+  
+  .email-count {
+    color: #5f6368;
+    font-size: 13px;
+  }
+  
+  /* Actions column styles */
+  .folder-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 16px;
+  }
+  
+  .folder-undo-button {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  
+  .folder-header:hover .folder-undo-button {
+    opacity: 1;
+  }
+  
+  .folder-undo-button:hover {
+    background-color: rgba(26, 115, 232, 0.1);
+  }
+  
+  /* Indented emails styles */
+  .folder-email {
+    padding-left: 24px !important;
+    border-left: 2px solid #e8eaed;
+  }
+  
+  .folder-email:hover {
+    border-left-color: #1a73e8;
+  }
+  
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    .folder-header {
+      background-color: #202124 !important;
+    }
+    
+    .folder-sender {
+      color: #e8eaed;
+    }
+    
+    .folder-toggle,
+    .email-count {
+      color: #9aa0a6;
+    }
+    
+    .folder-undo-button {
+      color: #8ab4f8;
+    }
+    
+    .folder-email {
+      border-left-color: #3c4043;
+    }
+  }
+  
+  /* Update undo button styles and position */
+  .bq4.xY {
+    position: relative;
+    padding-right: 16px !important;
+  }
+  
+  .folder-undo-button {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .folder-header:hover .folder-undo-button {
+    opacity: 1;
+  }
+  
+  .folder-undo-button:hover {
+    background-color: rgba(26, 115, 232, 0.1);
   }
   
